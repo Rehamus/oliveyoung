@@ -1,12 +1,14 @@
 import java.io.BufferedWriter;
-import java.io.FileWriter;
+import java.io.OutputStreamWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 public class CsvWriter {
 
     public static void saveToCSV(List<String[]> data, String fileName) {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileName))) {
+        try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(fileName), StandardCharsets.UTF_8))) {
             // CSV 파일의 헤더를 추가
             String[] header = {"Date", "Rate", "ID", "Skin Type", "Select 1 Title", "Select 1 Content", "Select 2 Title", "Select 2 Content", "Review Text"};
             writer.write(String.join(",", header));
