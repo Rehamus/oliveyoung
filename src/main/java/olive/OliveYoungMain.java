@@ -1,17 +1,31 @@
 package olive;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class OliveYoungMain {
     public static void main(String[] args) {
         // 카테고리 페이지에서 URL 리스트를 가져옴
         List<String> productUrls = OliveYoungCategoryCrawler.getProductUrls(
-                "https://www.oliveyoung.co.kr/store/display/getMCategoryList.do?dispCatNo=1000001000100130001&t_page=%EC%83%81%ED%92%88%EC%83%81%EC%84%B8&t_click=%EC%86%8C%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC_%EC%9D%B4%EB%8F%99&t_goods_name=%5B9%EC%9B%94%20%EC%98%AC%EC%98%81%ED%94%BD%2F%ED%86%A0%EB%84%88%20250ml%EC%A6%9D%EC%A0%95%5D%EB%B0%94%EC%9D%B4%EC%98%A4%EB%8D%94%EB%A7%88%20%ED%95%98%EC%9D%B4%EB%93%9C%EB%9D%BC%EB%B9%84%EC%98%A4%20%ED%86%A0%EB%84%88%20500ml%20%EA%B8%B0%ED%9A%8D(%2B%ED%86%A0%EB%84%88%20250ml%20%EC%A6%9D%EC%A0%95)&t_goods_no=A000000188933"
+//                "https://www.oliveyoung.co.kr/store/display/getMCategoryList.do?dispCatNo=1000001000600010005&fltDispCatNo=&prdSort=01&pageIdx=1&rowsPerPage=24&searchTypeSort=btn_thumb&plusButtonFlag=N&isLoginCnt=2&aShowCnt=0&bShowCnt=0&cShowCnt=0&trackingCd=Cat1000001000600010005_Small&amplitudePageGubun=SMALL_CATE&t_page=%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC%EA%B4%80&t_click=%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC%EC%83%81%EC%84%B8_%EC%86%8C%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC&midCategory=%EB%A9%94%EC%9D%B4%ED%81%AC%EC%97%85%EC%86%8C%ED%92%88&smallCategory=%EC%86%8C_%ED%8D%BC%ED%94%84",
+                "https://www.oliveyoung.co.kr/store/display/getMCategoryList.do?dispCatNo=1000001000600010006&fltDispCatNo=&prdSort=01&pageIdx=1&rowsPerPage=24&searchTypeSort=btn_thumb&plusButtonFlag=N&isLoginCnt=2&aShowCnt=0&bShowCnt=0&cShowCnt=0&trackingCd=Cat1000001000600010006_Small&amplitudePageGubun=SMALL_CATE&t_page=%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC%EA%B4%80&t_click=%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC%EC%83%81%EC%84%B8_%EC%86%8C%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC&midCategory=%ED%8D%BC%ED%94%84&smallCategory=%EC%86%8C_%EC%8A%A4%ED%8E%80%EC%A7%80&checkBrnds=&lastChkBrnd=&t_3rd_category_type=%EC%86%8C_%EC%8A%A4%ED%8E%80%EC%A7%80"
                 ,"src/driver/chromedriver.exe");
 
-        // OliveYoungCrawler를 사용하여 각 상품 페이지를 크롤링
-        OliveYoungCrawler.olive(productUrls.toArray(new String[0]));
+        // 스레드 풀을 생성하여 최대 5개의 스레드를 동시에 실행
+        ExecutorService executor = Executors.newFixedThreadPool(6);
 
-        // 검색패이지는 검색할 수 있게 만들어도 될거같다 결국 주소에 검색에가 들어가니 '주소 + 검색어 ' 가 가능하니
+        // 각 상품 페이지에 대해 크롤러 작업을 스레드로 실행
+        for (String url : productUrls) {
+            executor.submit(() -> OliveYoungCrawler.olive(new String[]{url}));
+        }
+
+        // 작업이 모두 완료될 때까지 기다림
+        executor.shutdown(); // 더 이상 새로운 작업을 제출하지 않음
+        while (!executor.isTerminated()) {
+            // 모든 작업이 끝날 때까지 대기
+        }
+
+        System.out.println("모든 페이지 크롤링이 완료되었습니다.");
     }
 }

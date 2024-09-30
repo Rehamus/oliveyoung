@@ -14,6 +14,12 @@ import java.util.List;
 
 public class OliveYoungCrawler {
 
+    public static void main(String[] args) {
+
+        String[] url = {"https://www.oliveyoung.co.kr/store/goods/getGoodsDetail.do?goodsNo=A000000117992&dispCatNo=1000001000600010006&trackingCd=Cat1000001000600010006_Small&t_page=%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC%EA%B4%80&t_click=%EC%8A%A4%ED%8E%80%EC%A7%80_%EC%86%8C_%EC%8A%A4%ED%8E%80%EC%A7%80__%EC%83%81%ED%92%88%EC%83%81%EC%84%B8&t_number=6"};
+
+        olive(url);
+    }
     public static void olive(String[] urls) {
         System.setProperty("webdriver.chrome.driver", "src/driver/chromedriver.exe");
 
@@ -35,7 +41,7 @@ public class OliveYoungCrawler {
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(5));
 
         try {
-            Thread.sleep(5000); // 10초 대기
+            Thread.sleep(5000); // 5초 대기
             WebElement reviewTab = wait.until(ExpectedConditions.elementToBeClickable(By.id("reviewInfo")));
             reviewTab.click();
         } catch (Exception e) {
@@ -48,15 +54,37 @@ public class OliveYoungCrawler {
 
         boolean skipSkinType = false; // Skin Type 추출을 건너뛰는 플래그
 
-        int totalPages = 2;
-        for (int currentPage = 1; currentPage <= totalPages; currentPage++) {
+        int totalPages = 100;
+        int currentPage = 1; // 현재 페이지 번호 초기화
+        while (currentPage <= totalPages) {
             skipSkinType = extractReviewsFromPage(driver, wait, reviewData, currentPage, skipSkinType);
-            navigateToNextPage(driver, currentPage);
+
+            try {
+                // 다음 페이지 버튼을 찾음, currentPage에 1을 더한 페이지 번호로 클릭
+                WebElement nextPageButton = driver.findElement(By.cssSelector("a[data-page-no='" + (currentPage + 1) + "']"));
+
+                // 페이지 버튼이 존재하고 클릭할 수 있는 상태인지 확인
+                if (nextPageButton.isDisplayed() && nextPageButton.isEnabled()) {
+                    nextPageButton.click();  // 다음 페이지 클릭
+                    Thread.sleep(3500);  // 페이지 로드를 기다림
+                    currentPage++;  // 페이지 번호 증가
+                } else {
+                    System.out.println("더 이상 페이지를 넘길 수 없습니다. (마지막 페이지)");
+                    break; // 더 이상 페이지가 없으면 종료
+                }
+            } catch (org.openqa.selenium.NoSuchElementException e) {
+                System.out.println("더 이상 페이지가 없습니다.");
+                break; // 더 이상 페이지가 없으면 종료
+            } catch (Exception e) {
+                System.out.println("페이지 이동 중 오류 발생: " + e.getMessage());
+                break; // 오류 발생 시에도 더 이상 페이지가 없다고 간주
+            }
         }
 
         String safeFileName = makeSafeFileName(productName + ".csv");
         CsvWriter.saveToCSV(reviewData, safeFileName);
     }
+
     // 헬퍼 메서드: 주어진 CSS 선택자를 사용해 텍스트를 추출하는 메서드
     private static String extractText(WebDriverWait wait, String cssSelector, String errorMessage) {
         try {
@@ -106,14 +134,14 @@ public class OliveYoungCrawler {
 
             String skinType = "", select1Title = "", select1Content = "", select2Title = "", select2Content = "";
 
-            if (!skipSkinType) {
+          /*  if (!skipSkinType) {
                 // skinType 정보 추출
                 skinType = extractText(wait, "#gdasList > li:nth-child(" + reviewIndex + ") > div.review_cont > div.poll_sample > dl:nth-child(1) > dd > span", "Skin Type 정보가 없음.");
                 select1Title = extractText(wait, "#gdasList > li:nth-child(" + reviewIndex + ") > div.review_cont > div.poll_sample > dl:nth-child(1) > dt > span", "Select 1 Title 정보가 없음.");
                 select1Content = extractText(wait, "#gdasList > li:nth-child(" + reviewIndex + ") > div.review_cont > div.poll_sample > dl:nth-child(1) > dd > span", "Select 1 Content 정보가 없음.");
                 select2Title = extractText(wait, "#gdasList > li:nth-child(" + reviewIndex + ") > div.review_cont > div.poll_sample > dl:nth-child(2) > dt > span", "Select 2 Title 정보가 없음.");
                 select2Content = extractText(wait, "#gdasList > li:nth-child(" + reviewIndex + ") > div.review_cont > div.poll_sample > dl:nth-child(2) > dd > span", "Select 2 Content 정보가 없음.");
-            }
+            }*/
             return new String[]{
                     dateElement.getText(),
                     rateElement.getText(),
@@ -130,29 +158,6 @@ public class OliveYoungCrawler {
             return null;
         }
     }
-
-    private static void navigateToNextPage(WebDriver driver, int currentPage) {
-        try {
-            // 다음 페이지 버튼을 찾음, currentPage에 1을 더한 페이지 번호로 클릭
-            WebElement nextPageButton = driver.findElement(By.cssSelector("a[data-page-no='" + (currentPage + 1) + "']"));
-
-            // 페이지 버튼이 존재하고 클릭할 수 있는 상태인지 확인
-            if (nextPageButton.isDisplayed() && nextPageButton.isEnabled()) {
-                nextPageButton.click();  // 다음 페이지 클릭
-                currentPage++;  // 페이지 번호 증가
-                Thread.sleep(2000);  // 페이지 로드를 기다림
-            } else {
-                System.out.println("더 이상 페이지를 넘길 수 없습니다. (마지막 페이지)");
-            }
-
-        } catch (org.openqa.selenium.NoSuchElementException e) {
-            System.out.println("더 이상 페이지가 없습니다. 크롤링을 종료합니다.");
-        } catch (Exception e) {
-            System.out.println("페이지 이동 중 오류 발생: " + e.getMessage());
-        }
-    }
-
-
 
     public static String makeSafeFileName(String fileName) {
         return fileName.replaceAll("[\\\\/:*?\"<>|]", "");
