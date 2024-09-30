@@ -1,3 +1,5 @@
+package olive;
+
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -17,7 +19,7 @@ public class OliveYoungCrawler {
 
         ChromeOptions options = new ChromeOptions();
         options.setPageLoadStrategy(org.openqa.selenium.PageLoadStrategy.EAGER);
-        options.addArguments("--headless");
+//        options.addArguments("--headless");
 
         WebDriver driver = new ChromeDriver(options);
 
@@ -49,7 +51,7 @@ public class OliveYoungCrawler {
         int totalPages = 2;
         for (int currentPage = 1; currentPage <= totalPages; currentPage++) {
             skipSkinType = extractReviewsFromPage(driver, wait, reviewData, currentPage, skipSkinType);
-            navigateToNextPage(wait, currentPage);
+            navigateToNextPage(driver, currentPage);
         }
 
         String safeFileName = makeSafeFileName(productName + ".csv");
@@ -129,32 +131,27 @@ public class OliveYoungCrawler {
         }
     }
 
-    private static void navigateToNextPage(WebDriverWait wait, int currentPage) {
+    private static void navigateToNextPage(WebDriver driver, int currentPage) {
         try {
-            WebElement nextPageButton = null;
-
-            // 현재 페이지가 10의 배수가 아니면 다음 페이지로 이동
-            if (currentPage % 10 != 0) {
-                nextPageButton = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("#gdasContentsArea > div > div.pageing > a:nth-child(" + (currentPage % 10 + 1) + ")")));
-            } else {
-                // 10의 배수일 때는 '다음' 버튼으로 이동
-                nextPageButton = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("#gdasContentsArea > div > div.pageing > a.next")));
-            }
+            // 다음 페이지 버튼을 찾음, currentPage에 1을 더한 페이지 번호로 클릭
+            WebElement nextPageButton = driver.findElement(By.cssSelector("a[data-page-no='" + (currentPage + 1) + "']"));
 
             // 페이지 버튼이 존재하고 클릭할 수 있는 상태인지 확인
-            if (nextPageButton != null && nextPageButton.isDisplayed() && nextPageButton.isEnabled()) {
-                nextPageButton.click();
-                Thread.sleep(2000); // 페이지 로드를 기다림
+            if (nextPageButton.isDisplayed() && nextPageButton.isEnabled()) {
+                nextPageButton.click();  // 다음 페이지 클릭
+                currentPage++;  // 페이지 번호 증가
+                Thread.sleep(2000);  // 페이지 로드를 기다림
             } else {
                 System.out.println("더 이상 페이지를 넘길 수 없습니다. (마지막 페이지)");
             }
 
         } catch (org.openqa.selenium.NoSuchElementException e) {
-            System.out.println("페이지 넘김 버튼을 찾을 수 없습니다: " + e.getMessage());
+            System.out.println("더 이상 페이지가 없습니다. 크롤링을 종료합니다.");
         } catch (Exception e) {
             System.out.println("페이지 이동 중 오류 발생: " + e.getMessage());
         }
     }
+
 
 
     public static String makeSafeFileName(String fileName) {
