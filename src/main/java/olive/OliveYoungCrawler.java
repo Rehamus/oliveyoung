@@ -28,7 +28,7 @@ public class OliveYoungCrawler {
 
         ChromeOptions options = new ChromeOptions();
         options.setPageLoadStrategy(org.openqa.selenium.PageLoadStrategy.EAGER);
-//        options.addArguments("--headless");
+        options.addArguments("--headless");
 
         WebDriver driver = new ChromeDriver(options);
 
@@ -69,7 +69,7 @@ public class OliveYoungCrawler {
                 // 페이지 버튼이 존재하고 클릭할 수 있는 상태인지 확인
                 if (nextPageButton.isDisplayed() && nextPageButton.isEnabled()) {
                     nextPageButton.click();  // 다음 페이지 클릭
-                    Thread.sleep(3500);  // 페이지 로드를 기다림
+                    Thread.sleep(4500);  // 페이지 로드를 기다림
                     currentPage++;  // 페이지 번호 증가
                 } else {
                     System.out.println("더 이상 페이지를 넘길 수 없습니다. (마지막 페이지)");
