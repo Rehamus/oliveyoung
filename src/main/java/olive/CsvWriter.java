@@ -11,9 +11,9 @@ import java.util.List;
 public class CsvWriter {
 
     // 저장 경로를 포함한 파일명을 받는 메서드
-    public static void saveToCSV(List<String[]> data, String fileName) {
+    public static void saveToCSV(List<String[]> data, String fileName , String file) {
         // 원하는 파일 저장 경로를 지정
-        String saveDirectory = "./review";  // 절대 경로 (예시)
+        String saveDirectory = "./review/"+file;  // 절대 경로 (예시)
         // 파일 경로 생성 (절대 경로로 합치기)
         String fullPath = Paths.get(saveDirectory, fileName).toString(); // 경로와 파일명을 결합
 
