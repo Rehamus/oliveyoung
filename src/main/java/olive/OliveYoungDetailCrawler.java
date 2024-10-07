@@ -12,16 +12,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
-public class OliveYoungCrawler {
-
-    public static void main(String[] args) {
-
-        String[] url = {"https://www.oliveyoung.co.kr/store/goods/getGoodsDetail.do?goodsNo=A000000117992&dispCatNo=1000001000600010006&trackingCd=Cat1000001000600010006_Small&t_page=%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC%EA%B4%80&t_click=%EC%8A%A4%ED%8E%80%EC%A7%80_%EC%86%8C_%EC%8A%A4%ED%8E%80%EC%A7%80__%EC%83%81%ED%92%88%EC%83%81%EC%84%B8&t_number=6"};
-
-        String file = "sponge";
-
-        olive(url,file);
-    }
+public class OliveYoungDetailCrawler {
 
     public static void olive(String[] urls, String file) {
         System.setProperty("webdriver.chrome.driver", "src/driver/chromedriver.exe");
@@ -69,7 +60,7 @@ public class OliveYoungCrawler {
                 // 페이지 버튼이 존재하고 클릭할 수 있는 상태인지 확인
                 if (nextPageButton.isDisplayed() && nextPageButton.isEnabled()) {
                     nextPageButton.click();  // 다음 페이지 클릭
-                    Thread.sleep(4500);  // 페이지 로드를 기다림
+                    Thread.sleep(3000);  // 페이지 로드를 기다림
                     currentPage++;  // 페이지 번호 증가
                 } else {
                     System.out.println("더 이상 페이지를 넘길 수 없습니다. (마지막 페이지)");

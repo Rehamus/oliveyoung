@@ -11,8 +11,8 @@ import java.util.List;
 public class OliveYoungCategoryCrawler {
 
     // 상품 URL을 크롤링하여 리스트로 반환하는 메서드
-    public static List<String> getProductUrls(String url ,String driverPath) {
-        System.setProperty("webdriver.chrome.driver", driverPath);
+    public static List<String> getProductUrls(String url ) {
+        System.setProperty("webdriver.chrome.driver","src/driver/chromedriver.exe" );
         WebDriver driver = new ChromeDriver();
 
         List<String> productUrls = new ArrayList<>(); // 상품 URL 리스트
