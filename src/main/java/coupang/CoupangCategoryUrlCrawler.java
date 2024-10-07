@@ -50,7 +50,7 @@ public class CoupangCategoryUrlCrawler {
         handlePopupIfPresent(driver);
         afterUrl(driver, wait);
 
-        WebElement categoryTitleElement = driver.findElement(By.cssSelector("div.newcx-main > h1"));
+        WebElement categoryTitleElement = driver.findElement(By.cssSelector("div.brand-name"));
         String categoryTitle = categoryTitleElement.getText(); //CSV 이름으로 사용할 것
         categoryTitle = categoryTitle.replaceAll("[\\\\/:*?\"<>|]", "");
 

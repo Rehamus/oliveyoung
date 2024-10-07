@@ -11,6 +11,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import static coupang.CoupangCategoryUrlCrawler.getAllProductUrlsInCategory;
+
 import static coupang.CoupangCategoryUrlCrawler.getCSVofAllProductUrlsInCategory;
 import static coupang.WebDriverSetting.*;
 
