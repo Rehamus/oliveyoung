@@ -6,10 +6,7 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static coupang.WebDriverSetting.*;
 
@@ -24,7 +21,7 @@ public class CoupangCategoryUrlCrawler {
         handlePopupIfPresent(driver);
         afterUrl(driver, wait);
 
-        WebElement categoryTitleElement = driver.findElement(By.cssSelector("div.newcx-main > h1"));
+        WebElement categoryTitleElement = driver.findElement(By.cssSelector("div.brand-name"));
         String categoryTitle = categoryTitleElement.getText(); //CSV 이름으로 사용할 것
         categoryTitle = categoryTitle.replaceAll("[\\\\/:*?\"<>|]", "");
 
@@ -64,6 +61,7 @@ public class CoupangCategoryUrlCrawler {
         }
 
         CsvWriter.saveUrlsToCSV(allProductUrlsInCategory, categoryTitle + " 카테고리 상품 Urls.csv");
+        driver.quit();
     }
 
     static Set<String> getProductIndexesInCategory(WebDriver driver) {
@@ -79,18 +77,24 @@ public class CoupangCategoryUrlCrawler {
             //페이지 넘기기
             int nextPage = currentPage + 1;
 
-            String nextPageLocation = "a.icon.next-page";
-            List<WebElement> nextPageElements = driver.findElements(By.cssSelector(nextPageLocation));
+            try {
+                Random random = new Random();
 
-            if (!nextPageElements.isEmpty()) {
-                WebElement nextPageElement = nextPageElements.get(0);
-                String nextIconHref = nextPageElement.getAttribute("href");
-                driver.get(nextIconHref);
-                System.out.println("load next page: " + nextPage);
+                js.executeScript("window.scrollTo(0, document.body.scrollHeight);");
+                Thread.sleep((random.nextInt(2) + 2) * 800);
+
+                WebElement nextPageButton = driver.findElement(By.cssSelector("#product-list-paging a[data-page='" + (currentPage + 1) + "']"));
+                System.out.println("다음 페이지: " + nextPageButton.getText());
+                nextPageButton.click();
                 currentPage++;
-                randomTimeSleep();
-            } else {
-                System.out.println("더 이상 페이지가 없습니다. 크롤링을 종료합니다.");
+
+                Thread.sleep((random.nextInt(5) + 2) * 1000);
+            } catch (NoSuchElementException e) {
+                System.out.println("다음 페이지 버튼이 없습니다. 크롤링을 종료합니다.");
+                driver.quit();
+                flag = false;
+            } catch (Exception e) {
+                System.out.println("페이지 이동 중 오류 발생: " + e.getMessage());
                 driver.quit();
                 flag = false;
             }

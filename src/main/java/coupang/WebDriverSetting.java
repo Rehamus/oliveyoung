@@ -70,7 +70,7 @@ public class WebDriverSetting {
 
     static void randomTimeSleep() {
         try {
-            int randomSleepTime = ThreadLocalRandom.current().nextInt(1000, 4001);
+            int randomSleepTime = ThreadLocalRandom.current().nextInt(2200, 5120);
             System.out.println("Sleeping for " + randomSleepTime + " milliseconds");
 
             Thread.sleep(randomSleepTime);  // 랜덤한 시간 동안 대기
