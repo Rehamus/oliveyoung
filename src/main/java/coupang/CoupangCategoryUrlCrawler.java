@@ -1,6 +1,7 @@
 package coupang;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -21,23 +22,109 @@ public class CoupangCategoryUrlCrawler {
         handlePopupIfPresent(driver);
         afterUrl(driver, wait);
 
-        WebElement categoryTitleElement = driver.findElement(By.cssSelector("div.brand-name"));
-        String categoryTitle = categoryTitleElement.getText(); //CSV 이름으로 사용할 것
-        categoryTitle = categoryTitle.replaceAll("[\\\\/:*?\"<>|]", "");
+        //브렌드 1
+        WebElement categoryTitleElement = driver.findElement(By.cssSelector("div[data-brand-name]"));
+        String categoryTitle = categoryTitleElement.getAttribute("data-brand-name");
 
         String baseUrl = "https://www.coupang.com/vp/products/";
         Set<String> indexesInCategory = getProductIndexesInCategory(driver);
 
         List<String> allProductUrlsInCategory = new ArrayList<>();
+
         for (String index : indexesInCategory) {
             String productUrl = baseUrl + index;
             allProductUrlsInCategory.add(productUrl);
         }
 
-        CsvWriter.saveUrlsToCSV(allProductUrlsInCategory, categoryTitle +"카테고리 상품 Urls.csv");
+        /*//브렌드 2
+        WebElement storeTitleElement = driver.findElement(By.cssSelector("h1.store-title"));
+        String categoryTitle = storeTitleElement.getText();
+        categoryTitle = categoryTitle.replaceAll("[\\\\/:*?\"<>|]", "");
+
+        scrollToEndOfPage(driver);
+
+        List<String> allProductUrlsInCategory = new ArrayList<>();
+
+        WebElement productList = driver.findElement(By.cssSelector(".products-list"));
+
+        List<WebElement> productItems = productList.findElements(By.cssSelector("li"));
+
+        // 각 li 항목의 상품명과 href 추출
+        for (WebElement item : productItems) {
+            try {
+                // 상품명 추출
+                WebElement nameElement = item.findElement(By.cssSelector(".name"));
+                String productName = nameElement.getText();
+
+                // 링크 추출
+                WebElement linkElement = item.findElement(By.cssSelector("a"));
+                String productLink = linkElement.getAttribute("href");
+
+                // 추출한 값 출력
+                System.out.println("상품명: " + productName);
+                System.out.println("상품 링크: " + productLink);
+                System.out.println("---------------------------------------");
+
+                // URL 리스트에 추가
+                allProductUrlsInCategory.add(productLink);
+
+            } catch (Exception e) {
+                System.out.println("데이터 추출 중 오류 발생: " + e.getMessage());
+            }
+        }*/
+
+        CsvWriter.saveUrlsToCSV(allProductUrlsInCategory, categoryTitle,categoryTitle +"카테고리 상품 Urls.csv");
 
         return allProductUrlsInCategory;
     }
+
+    public static void scrollToEndOfPage(WebDriver driver) {
+        JavascriptExecutor js = (JavascriptExecutor) driver;
+        int scrollAttempts = 0;
+        long lastHeight = (long) js.executeScript("return document.body.scrollHeight");
+
+        while (true) {
+            // 페이지 끝으로 스크롤
+            js.executeScript("window.scrollTo(0, document.body.scrollHeight);");
+
+            // 3초 대기
+            try {
+                Thread.sleep(3000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            // 새로운 높이 가져오기
+            long newHeight = (long) js.executeScript("return document.body.scrollHeight");
+
+            // 스크롤할 수 없는 경우 (높이에 변화가 없을 경우)
+            if (newHeight == lastHeight) {
+                scrollAttempts++;
+                System.out.println("더 이상 스크롤할 수 없음. 현재 시도 횟수: " + scrollAttempts);
+
+                // 3번 반복했으면 종료
+                if (scrollAttempts >= 3) {
+                    System.out.println("페이지의 끝까지 3번 스크롤 시도 완료. 종료합니다.");
+                    break;
+                }
+
+                // 페이지 맨 위로 이동
+                js.executeScript("window.scrollTo(0, 0);");
+
+                // 3초 대기 후 다시 시도
+                try {
+                    Thread.sleep(3000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                // 높이에 변화가 있을 경우 스크롤 시도 횟수 초기화
+                scrollAttempts = 0;
+                lastHeight = newHeight;
+            }
+        }
+    }
+
     //카테고리 내 상품들의 URL 을 중복 없이 크롤링(저장만, 반환값 없음)
     static void getCSVofAllProductUrlsInCategory(String categoryUrl) {
 
@@ -60,7 +147,7 @@ public class CoupangCategoryUrlCrawler {
             allProductUrlsInCategory.add(productUrl);
         }
 
-        CsvWriter.saveUrlsToCSV(allProductUrlsInCategory, categoryTitle + " 카테고리 상품 Urls.csv");
+        CsvWriter.saveUrlsToCSV(allProductUrlsInCategory, categoryTitle + " 카테고리 상품 Urls.csv",categoryTitle);
         driver.quit();
     }
 

@@ -129,7 +129,121 @@ public class CoupangCrawler {
 
             }
             randomTimeSleep();
-            CsvWriter.saveToCSVForCoupang(reviewData, headers, productName + ".csv");
+//            CsvWriter.saveToCSVForCoupang(reviewData, headers, productName + ".csv");
+        }
+        driver.quit();
+    }
+
+    public static void pageCrawler_v2(String url, WebDriver driver, WebDriverWait wait ,String fileName) {
+        String productId = extractProductId(url);
+
+        driver.get(url);
+        handlePopupIfPresent(driver);
+        afterUrl(driver, wait);
+
+        String productNameLocation = ".prod-buy-header__title";
+        String productName = getTextOfElement(productNameLocation, wait)
+                .replaceAll("[\\\\/:*?\"<>|]", "") + productId;
+
+        List<List<String>> reviewData = new ArrayList<>();
+        List<String> headers = new ArrayList<>(Arrays.asList("Date", "Rate", "Nickname", "Option", "Title", "Content"));
+
+        int checkedCount = checkReviewCount();
+        if (checkedCount <= 0) {
+            List<String> emptyRow = new ArrayList<>(Arrays.asList(checkedCount + "개", "", "", "", ""));
+            reviewData.add(emptyRow);
+
+            System.out.println("등록된 리뷰가 없어 driver를 종료합니다.");
+            driver.quit();
+            return;
+        } else {
+            try {
+                WebElement reviewsLink = driver.findElement(By.cssSelector("a.moveAnchor#prod-review-nav-link .count"));
+                reviewsLink.click();
+                wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("div.sdp-review__article.js_reviewArticleContainer > section.js_reviewArticleListContainer")));
+            } catch (Exception e) {
+                System.out.println("리뷰 클릭중 오류 발생: " + e.getMessage());
+            }
+
+            boolean flag = true;
+            int currentPage = 1;
+            while (flag) {
+                System.out.println("현재 페이지: " + currentPage);
+
+                String reviewContainerLocation = "div.sdp-review__article.js_reviewArticleContainer > section.js_reviewArticleListContainer";
+
+                try {
+                    WebElement reviewContainer = driver.findElement(By.cssSelector(reviewContainerLocation));
+                    List<WebElement> reviewArticles = reviewContainer.findElements(By.cssSelector("article"));
+                    if (!reviewArticles.isEmpty()) {
+                        String reviewLocation = "div.sdp-review__article.js_reviewArticleContainer > section.js_reviewArticleListContainer > article";
+                        int reviewCount = countInCurrentPage(reviewLocation, driver);
+                        wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(reviewLocation)));
+//                        System.out.println("현재 페이지 리뷰: " + reviewCount + "개");
+
+                        for (int i = 1; i <= reviewCount; i++) {
+                            try {
+                                String baseLocation = "div.sdp-review__article.js_reviewArticleContainer > section.js_reviewArticleListContainer > article:nth-child(" + (2 + i) + ")";
+//                                System.out.println(currentPage + "페이지의" + i + "번 상품평");
+
+                                String dateLocation = baseLocation + " > div.sdp-review__article__list__info > div.sdp-review__article__list__info__product-info > div.sdp-review__article__list__info__product-info__reg-date";
+                                String date = getTextOfElement(dateLocation, wait);
+
+                                String rateLocation = baseLocation + " > div.sdp-review__article__list__info > div.sdp-review__article__list__info__product-info > div.sdp-review__article__list__info__product-info__star-gray > div.sdp-review__article__list__info__product-info__star-orange.js_reviewArticleRatingValue";
+                                String tagName = "data-rating";
+                                String rate = getTextInTagOfElement(rateLocation, tagName, wait);
+
+                                String nicknameLocation = baseLocation + " > div.sdp-review__article__list__info > div.sdp-review__article__list__info__user > span";
+                                String nickname = getTextOfElement(nicknameLocation, wait);
+
+                                String optionLocation = baseLocation + "> div.sdp-review__article__list__info > div.sdp-review__article__list__info__product-info__name";
+                                String option = getTextOfElement(optionLocation, wait);
+
+                                String titleLocation = baseLocation + " > div.sdp-review__article__list__headline";
+                                String reviewTitle = getTextOfElementIfExist(titleLocation, "title", driver, wait);
+
+                                String reviewContentLocation = baseLocation + " > div.sdp-review__article__list__review.js_reviewArticleContentContainer > div";
+                                String reviewContent = getTextOfElementIfExist(reviewContentLocation, "content", driver, wait);
+
+                                // rowData를 headers 크기만큼 미리 생성
+                                List<String> rowData = new ArrayList<>(Arrays.asList(date, rate, nickname, option, reviewTitle, reviewContent));
+                                while (rowData.size() < headers.size()) {
+                                    rowData.add(""); // 빈 셀로 채우기
+                                }
+
+                                rowData = extractSurveyDataIfExist(baseLocation, headers, rowData, driver, wait);
+                                reviewData.add(rowData);
+
+                            } catch (Exception e) {
+                                System.out.println("크롤링 중 예외발생: " + e.getMessage());
+                                System.out.println("상품평이 없습니다.");
+                                break;
+                            }
+                        }
+                        System.out.println(currentPage + " 페이지 크롤링 완료");
+
+                        flag = goToNextPage(currentPage, driver, wait, reviewLocation);
+                        if (flag) {
+                            currentPage++;
+                        } else {
+                            // 상품평이 없는 경우 처리
+                            System.out.println("더 이상 상품평이 없습니다.");
+                        }
+
+                    } else {
+                        System.out.println(currentPage + "페이지에 등록된 상품평이 없습니다.");
+                        flag = false;
+                    }
+
+                } catch (NoSuchElementException e) {
+                    System.out.println("리뷰 컨테이너를 찾지 못했습니다: " + e.getMessage());
+                    System.out.println(currentPage + "에 등록된 상품평이 없습니다");
+                    break;
+                }
+
+            }
+            randomTimeSleep();
+            CsvWriter.saveToCSVForCoupang(reviewData, headers, fileName,productName + ".csv");
         }
         driver.quit();
     }
@@ -295,7 +409,7 @@ public class CoupangCrawler {
 
     private static void randomTimeSleep() {
         try {
-            int randomSleepTime = ThreadLocalRandom.current().nextInt(1000, 3001);
+            int randomSleepTime = ThreadLocalRandom.current().nextInt(4510, 6400);
             System.out.println("Sleeping for " + randomSleepTime + " milliseconds");
 
             Thread.sleep(randomSleepTime);  // 랜덤한 시간 동안 대기
