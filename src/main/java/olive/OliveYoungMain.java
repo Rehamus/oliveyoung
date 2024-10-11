@@ -1,7 +1,8 @@
 package olive;
 
+import coupang.CoupangCategoryUrlCrawler;
 import olive.Crawler.OliveYoungBrendCrawler;
-import olive.Crawler.OliveYoungCategoryCrawler;
+
 import olive.Crawler.OliveYoungSearchCrawler;
 
 import java.util.ArrayList;
@@ -131,7 +132,7 @@ public class OliveYoungMain {
         switch (map) {
             case "검색" -> productUrls = OliveYoungSearchCrawler.getProductUrls(mainUrl);
             case "브렌드" -> productUrls = OliveYoungBrendCrawler.getProductUrls(mainUrl);
-            default -> productUrls = OliveYoungCategoryCrawler.getProductUrls(mainUrl);
+            default -> productUrls = OliveYoungBrendCrawler.getProductUrls(mainUrl);
         }
 
         for (String url : productUrls) {

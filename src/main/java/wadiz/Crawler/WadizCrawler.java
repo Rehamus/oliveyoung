@@ -1,4 +1,4 @@
-package olive.Crawler;
+package wadiz.Crawler;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
@@ -8,11 +8,11 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import java.util.ArrayList;
 import java.util.List;
 
-public class OliveYoungCategoryCrawler {
+public class WadizCrawler {
 
     // 상품 URL을 크롤링하여 리스트로 반환하는 메서드
-    public static List<String> getProductUrls(String url ) {
-        System.setProperty("webdriver.chrome.driver","src/driver/chromedriver.exe" );
+    public static List<String> getProductUrls(String url) {
+        System.setProperty("webdriver.chrome.driver", "src/driver/chromedriver.exe");
         WebDriver driver = new ChromeDriver();
 
         List<String> productUrls = new ArrayList<>(); // 상품 URL 리스트
@@ -26,18 +26,18 @@ public class OliveYoungCategoryCrawler {
 
             while (hasNextPage) {
                 // 모든 ul.cate_prd_list.gtm_cate_list 블록을 가져옴
-                List<WebElement> productLists = driver.findElements(By.cssSelector(".cate_prd_list"));
+                List<WebElement> productLists = driver.findElements(By.cssSelector("#allGoodsList"));
 
                 // 각 ul 블록을 순차적으로 처리
                 for (WebElement productList : productLists) {
                     // 각 ul 블록 내의 모든 li 태그를 가져옴 (data-index가 있는)
-                    List<WebElement> productItems = productList.findElements(By.cssSelector("li[data-index]"));
+                    List<WebElement> productItems = productList.findElements(By.cssSelector("li[data-goods-idx]"));
 
                     // 각 li 항목의 상품명과 href 추출
                     for (WebElement item : productItems) {
                         try {
                             // 상품명 추출
-                            WebElement nameElement = item.findElement(By.cssSelector(".prd_name p"));
+                            WebElement nameElement = item.findElement(By.cssSelector(".prod-info span"));
                             String productName = nameElement.getText();
 
                             // 링크 추출
