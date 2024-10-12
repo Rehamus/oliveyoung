@@ -19,7 +19,7 @@ public class WadizDetailCrawler {
 
         ChromeOptions options = new ChromeOptions();
         options.setPageLoadStrategy(org.openqa.selenium.PageLoadStrategy.EAGER);
-        options.addArguments("--headless");
+        options.addArguments("--headless"); // 브라우저를 숨기고 실행하려면 주석을 해제하세요
 
         WebDriver driver = new ChromeDriver(options);
 
@@ -34,75 +34,42 @@ public class WadizDetailCrawler {
         driver.get(url);
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(5));
 
-        try {
-            Thread.sleep(3000); // 3초 대기
-            WebElement reviewTab = wait.until(ExpectedConditions.elementToBeClickable(By.className("SignatureTitle_title__1IkIV SignatureTitle_titleMobile__2pm3w")));
-            reviewTab.click();
-        } catch (Exception e) {
-            System.out.println("리뷰 탭을 클릭하는 중 오류 발생: " + e.getMessage());
-        }
 
         List<String[]> reviewData = new ArrayList<>();
-        String productName = extractProductName(wait);
 
-        // 만족도 리뷰 텍스트 추출
-        String satisfactionReview = extractSatisfactionReview(wait);
-        if (satisfactionReview != null) {
-            System.out.println("만족도 리뷰: " + satisfactionReview);
+        // 리뷰 항목을 포함하는 최상위 div
+        List<WebElement> commentItems = driver.findElements(By.xpath("//div[@id='main-app']//div[contains(@class, 'CommentItem')]"));
+
+        for (WebElement commentItem : commentItems) {
+            try {
+                // 닉네임 추출
+                String nickname = commentItem.findElement(By.xpath(".//a[1]/div/div")).getText();
+
+                // 날짜 추출
+                String date = commentItem.findElement(By.xpath(".//a[1]/div/span")).getText();
+
+                // 평점 추출
+                String rating = commentItem.findElement(By.xpath(".//div[1]/div[1]/div/div[2]//span")).getText();
+
+                // 리뷰 내용 추출
+                String review = commentItem.findElement(By.xpath(".//p")).getText();
+
+                // 추출된 데이터 출력 및 CSV 저장을 위한 리스트에 추가
+                System.out.println("닉네임: " + nickname);
+                System.out.println("날짜: " + date);
+                System.out.println("평점: " + rating);
+                System.out.println("리뷰: " + review);
+
+                // 데이터 배열을 리스트에 추가
+                reviewData.add(new String[]{nickname, date, rating, review});
+            } catch (Exception e) {
+                System.out.println("리뷰 정보 추출 중 오류 발생: " + e.getMessage());
+            }
         }
 
-        String safeFileName = makeSafeFileName(productName + ".csv");
+        // 안전한 파일명 생성 및 CSV 저장
+        String safeFileName = makeSafeFileName(url + ".csv");
         CsvWriter.saveToCSV(reviewData, safeFileName, file);
-    }
-
-    // 헬퍼 메서드: 주어진 CSS 선택자를 사용해 텍스트를 추출하는 메서드
-    private static String extractText(WebDriverWait wait, String cssSelector, String errorMessage) {
-        try {
-            WebElement element = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(cssSelector)));
-            return element.getText();
-        } catch (Exception e) {
-            System.out.println(errorMessage);
-            return "";
-        }
-    }
-
-    private static String extractProductName(WebDriverWait wait) {
-        try {
-            WebElement productNameElement = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("p.prd_name")));
-            return productNameElement.getText();
-        } catch (Exception e) {
-            System.out.println("상품명을 추출하는 중 오류 발생: " + e.getMessage());
-            return null;
-        }
-    }
-
-    private static String extractSatisfactionReview(WebDriverWait wait) {
-        try {
-            WebElement satisfactionReviewElement = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("span.SatisfactionTitle_title__3E9lb.SatisfactionTitle_titleMobile__1RqOT")));
-            return satisfactionReviewElement.getText();
-        } catch (Exception e) {
-            System.out.println("만족도 리뷰를 추출하는 중 오류 발생: " + e.getMessage());
-            return null;
-        }
-    }
-
-    private static String[] extractSingleReview(WebDriverWait wait, int reviewIndex, boolean skipSkinType) {
-        try {
-            WebElement dateElement = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("#gdasList > li:nth-child(" + reviewIndex + ") > div.review_cont > div.score_area > span.date")));
-            WebElement idElement = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("#gdasList > li:nth-child(" + reviewIndex + ") > div.info > div > p.info_user > a.id")));
-            WebElement rateElement = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("#gdasList > li:nth-child(" + reviewIndex + ") > div.review_cont > div.score_area > span.review_point > span")));
-            WebElement txtElement = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("#gdasList > li:nth-child(" + reviewIndex + ") > div.review_cont > div.txt_inner")));
-
-            return new String[]{
-                    dateElement.getText(),
-                    rateElement.getText(),
-                    idElement.getText(),
-                    txtElement.getText()
-            };
-        } catch (Exception e) {
-            System.out.println("리뷰 추출 중 오류 발생: " + e.getMessage());
-            return null;
-        }
     }
 
     public static String makeSafeFileName(String fileName) {
