@@ -1,6 +1,5 @@
 package wadiz;
 
-import olive.Crawler.OliveYoungBrendCrawler;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -15,7 +14,7 @@ public class WadizMain {
                 "https://www.wadiz.kr/web/campaign/detail/qa/245521"
                 , "와디즈/1"
         });
-        crawlerUrls.add(new String[]{
+       /* crawlerUrls.add(new String[]{
                 "https://www.wadiz.kr/web/campaign/detail/qa/134880"
                 , "와디즈/2"
         });
@@ -34,27 +33,30 @@ public class WadizMain {
         crawlerUrls.add(new String[]{
                 "https://www.wadiz.kr/web/campaign/detail/qa/251969"
                 , "와디즈/6"
-        });
-
-        ExecutorService executor = Executors.newFixedThreadPool(3);
+        });*/
 
         for (String[] data : crawlerUrls) {
-            maker(executor, data[0], data[1]);
+            wadizmaker(data[0], data[1]);
         }
 
-        executor.shutdown();
 
-        System.out.println("모든 페이지 크롤링이 완료되었습니다.");
     }
 
-    private static void maker(ExecutorService executor, String mainUrl, String file) {
+    private static void wadizmaker(String mainUrl, String file) {
+
+        ExecutorService executor = Executors.newFixedThreadPool(3);
 
         String[] map = {"comment", "satisfaction", "signature"};
 
         for (int i = 0; i < map.length; i++) {
             int finalI = i;
-            executor.submit(() -> WadizDetailCrawler.wadiz(new String[]{mainUrl +"/"+ map[finalI]}, file,map[finalI]));
+            executor.submit(() -> WadizDetailCrawler.wadiz(new String[]{mainUrl + "/" + map[finalI]}, file, map[finalI]));
+            System.out.println( map[finalI] +" 페이지 크롤링이 완료되었습니다.");
+
         }
+
+//        executor.shutdown();
+
 
     }
 }
