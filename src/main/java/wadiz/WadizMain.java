@@ -14,7 +14,7 @@ public class WadizMain {
                 "https://www.wadiz.kr/web/campaign/detail/qa/245521"
                 , "와디즈/1"
         });
-       /* crawlerUrls.add(new String[]{
+        crawlerUrls.add(new String[]{
                 "https://www.wadiz.kr/web/campaign/detail/qa/134880"
                 , "와디즈/2"
         });
@@ -33,7 +33,7 @@ public class WadizMain {
         crawlerUrls.add(new String[]{
                 "https://www.wadiz.kr/web/campaign/detail/qa/251969"
                 , "와디즈/6"
-        });*/
+        });
 
         for (String[] data : crawlerUrls) {
             wadizmaker(data[0], data[1]);
@@ -50,12 +50,15 @@ public class WadizMain {
 
         for (int i = 0; i < map.length; i++) {
             int finalI = i;
-            executor.submit(() -> WadizDetailCrawler.wadiz(new String[]{mainUrl + "/" + map[finalI]}, file, map[finalI]));
+            executor.submit(
+                    () -> WadizDetailCrawler.wadiz(new String[]{mainUrl + "/" + map[finalI]}, file, map[finalI])
+
+            );
             System.out.println( map[finalI] +" 페이지 크롤링이 완료되었습니다.");
 
         }
 
-//        executor.shutdown();
+        executor.shutdown();
 
 
     }

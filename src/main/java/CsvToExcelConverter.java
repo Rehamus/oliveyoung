@@ -7,7 +7,7 @@ import java.util.*;
 
 public class CsvToExcelConverter {
     public static void main(String[] args) {
-        String folderPath = "C:\\Users\\samsung\\Desktop\\크롤링\\쿠팡 - 엑셀\\카테고리\\슬리핑팩"; // CSV 파일들이 있는 폴더 경로
+        String folderPath = "D:\\DD\\정리\\oliveyoung\\review\\쿠팡\\클렌징&필링\\클렌징오일"; // CSV 파일들이 있는 폴더 경로
 
         try {
             convertEachCsvToExcel(folderPath);

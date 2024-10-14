@@ -16,29 +16,30 @@ import java.util.List;
 public class WadizDetailCrawler {
 
     public static void wadiz(String[] urls, String file, String name) {
-        System.setProperty("webdriver.chrome.driver", "src/driver/chromedriver.exe");
 
+        for (String url : urls) {
+            crawler(url, file, name);
+        }
+
+    }
+
+    private static void crawler(String url, String file, String name) {
+
+        System.setProperty("webdriver.chrome.driver", "src/driver/chromedriver.exe");
         ChromeOptions options = new ChromeOptions();
-        options.setPageLoadStrategy(org.openqa.selenium.PageLoadStrategy.EAGER);
+//        options.setPageLoadStrategy(org.openqa.selenium.PageLoadStrategy.EAGER);
 //        options.addArguments("--headless"); // 브라우저를 숨기고 실행하려면 주석을 해제하세요
 
         WebDriver driver = new ChromeDriver(options);
 
-        for (String url : urls) {
-            crawler(driver, url, file, name);
-        }
 
-        driver.quit();
-    }
-
-    private static void crawler(WebDriver driver, String url, String file, String name) {
         driver.get(url);
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
 
         scrollToEndOfPage(driver);
 
         List<String[]> reviewData = new ArrayList<>();
-        String baseXPath = "/html/body/div[1]/main/div/div/div/div/div/div/div/div[1]/div[";
+        String baseXPath = "/html/body/div[1]/main/div/div/div/div/div/div/div[1]/div[1]/div[";
 
         int i = 1;
 
@@ -55,7 +56,7 @@ public class WadizDetailCrawler {
                 String nickname = nicknameElement.getText();
 
                 // 리뷰 내용 추출 (태그 구조와 위치를 기준으로 접근)
-                WebElement reviewElement = commentItem.findElement(By.xpath(".//div[2]/p"));
+                WebElement reviewElement = commentItem.findElement(By.xpath(".//div[contains(@class, 'CommentContent_contentWrapper')]/p"));
                 String review = reviewElement.getText();
 
                 System.out.println("닉네임: " + nickname);
@@ -73,6 +74,8 @@ public class WadizDetailCrawler {
 
         // 안전한 파일명 생성 및 CSV 저장
         CsvWriter.saveToCSV(reviewData, name, file);
+        driver.quit();
+
     }
 
     public static String makeSafeFileName(String fileName) {
